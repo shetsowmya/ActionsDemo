@@ -13,6 +13,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache download flag
+        uses: actions/cache@v4
+        with:
+          path: alpine_downloaded.flag
+          key: alpine-flag
+
       - name: Check or create flag
         id: check-flag
         run: |
