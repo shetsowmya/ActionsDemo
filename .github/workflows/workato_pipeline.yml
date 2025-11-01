@@ -26,11 +26,11 @@ jobs:
             echo "exists=false" >> $GITHUB_ENV
           fi
 
-      - name: Download Workato Docker container
+      - name: Download container
         if: env.exists == 'false'
         run: |
-          echo "Downloading Workato container..."
-          docker pull workato/workato:latest
+          echo "Downloading Alpine container..."
+          docker pull alpine
           echo "Workato image downloaded successfully."
 
       - name: Create flag file
@@ -39,6 +39,6 @@ jobs:
           echo "true" > .workato_downloaded
           echo "Flag created to indicate image has been downloaded."
           
-      - name: Verify Workato container
+      - name: Verify Alpine container
         run: |
           docker images | grep workato || echo "Workato image not found!"
