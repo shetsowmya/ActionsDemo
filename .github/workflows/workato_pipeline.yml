@@ -18,13 +18,12 @@ jobs:
       - name: Check if Workato image is already downloaded
         id: check_image
         run: |
-          if docker image inspect workato/workato > /dev/null 2>&1; then
-            echo "Image already exists, skipping download."
-            echo "exists=true" >> $GITHUB_ENV
-          else
-            echo "Image not found, will download."
-            echo "exists=false" >> $GITHUB_ENV
-          fi
+         if ! docker image inspect alpine > /dev/null 2>&1; then
+            echo "Downloading Alpine..."
+            docker pull alpine
+            else
+            echo "Alpine already downloaded — skipping."
+            fi
 
       - name: Download container
         if: env.exists == 'false'
