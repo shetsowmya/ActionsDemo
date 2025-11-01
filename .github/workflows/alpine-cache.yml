@@ -1,0 +1,45 @@
+name: Test Alpine Container with Cache
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-alpine:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout repo (required for hashFiles)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Cache Docker layers (so Alpine image persists between runs)
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.docker-cache
+          key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
+
+      # Step 3: Start Docker daemon and configure cache path
+      - name: Set up Docker cache
+        run: |
+          mkdir -p /tmp/.docker-cache
+          echo "Using Docker cache from previous runs (if any)..."
+
+      # Step 4: Check if Alpine exists; download only if missing
+      - name: Pull Alpine only if not cached
+        run: |
+          if ! docker image inspect alpine:latest > /dev/null 2>&1; then
+            echo "Downloading Alpine container..."
+            docker pull alpine:latest
+          else
+            echo "✅ Alpine already cached — skipping download."
+          fi
+
+      # Step 5: Run a command using Alpine
+      - name: Run Alpine container
+        run: |
+          docker run alpine:latest echo "Hello from cached Alpine!"
