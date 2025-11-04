@@ -1,0 +1,66 @@
+name: Cloud Run Deployment
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*'       # e.g. v29.0
+
+jobs:
+  cloudrun-deploy:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write  # Required for GCP authentication
+
+    env:
+      PROJECT_ID: your-gcp-project-id
+      REGION: us-central1
+      SERVICE_NAME: prismatic-onprem-agent
+
+    steps:
+      # Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Set up gcloud
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      # Determine image version
+      - name: Extract image version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            VERSION="latest"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      # Terraform init
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=your-tf-state-bucket" -backend-config="prefix=cloudrun/prismatic-agent"
+
+      # Terraform apply
+      - name: Terraform Apply - Update Cloud Run Revision
+        run: |
+          terraform apply -auto-approve \
+            -var "project_id=${{ env.PROJECT_ID }}" \
+            -var "region=${{ env.REGION }}" \
+            -var "service_name=${{ env.SERVICE_NAME }}" \
+            -var "image_version=${{ steps.version.outputs.version }}" \
+            -var "prismatic_api_key=${{ secrets.PRISMATIC_API_KEY }}"
