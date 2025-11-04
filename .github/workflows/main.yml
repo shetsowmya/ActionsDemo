@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*'       # e.g. v29.0
+      - 'v*.*'       # e.g. v30.0
 
 jobs:
   cloudrun-deploy:
