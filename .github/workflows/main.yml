@@ -26,6 +26,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Show current working directory
+          run:|
+            echo "Current directory:"
+            pwd
+            echo "Files in this directory:"
+            ls -al
       # Set up gcloud
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
